@@ -7,17 +7,25 @@ import pandas as pd
 
 rpc_url = "http://seed1.neo.org:10332"
 
-def _invoke_contract(hash, method):
-    payload = json.dumps({
-                            "jsonrpc": "2.0",
-                            "id": 1,
-                            "method": "invokefunction",
-                            "params": [
-                                        hash,
-                                        method,
-                                        []
-                                    ]
-                        })
+def _rpc_call(method, param = None):
+    if param:
+      payload = json.dumps({
+                              "jsonrpc": "2.0",
+                              "id": 1,
+                              "method": method,
+                              "params": [
+                                          param[0],
+                                          param[1],
+                                          []
+                                      ]
+                          })
+    else:
+      payload = json.dumps({
+                              "jsonrpc": "2.0",
+                              "id": 1,
+                              "method": method,
+                              "params": []
+                          })
     headers = {'content-type': "application/json", 'cache-control': "no-cache"}
     try:
         response = requests.request("POST", rpc_url, data=payload, headers=headers)
@@ -26,6 +34,12 @@ def _invoke_contract(hash, method):
         print(e)
     except:
         print('Unknown Error')
+        
+def get_block():
+    return _rpc_call("getblockcount")['result']
+
+def _invoke_contract(hash, method):
+    return _rpc_call("invokefunction", [hash, method])
 
 def _get_committee_info():
     return _invoke_contract("0xb776afb6ad0c11565e70f8ee1dd898da43e51be1","getAllInfo")
@@ -70,14 +84,22 @@ def get_table(show_hash = False):
     df.insert(0, 'Vote', 0)
     
     resp_invoke = _get_candidates()
-    
+    unknown_list = []
+
     for candidate in resp_invoke['result']['stack'][0]['value']:
-        key = candidate['value'][0]['value']
+        key = _b64pubkey_to_b64scripthash(candidate['value'][0]['value'])
         vote = candidate['value'][1]['value']
 
-        df.loc[df['Hash(Base64)'] == _b64pubkey_to_b64scripthash(key), 'Vote'] = vote
+        if key in df['Hash(Base64)'].values:
+            df.loc[df['Hash(Base64)'] == key, 'Vote'] = vote
+        else:
+            unknown_list.append([vote, key])
+
+    if unknown_list:
+        COL = ['Vote', 'Hash(Base64)']
+        df_unknown = pd.DataFrame(unknown_list, columns = COL)
 
     if not show_hash:
         df = df.drop(['Hash(Base64)'], axis=1)
     
-    return df
+    return df, df_unknown

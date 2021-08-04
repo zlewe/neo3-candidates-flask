@@ -5,7 +5,20 @@
 
 <body>
     <h1>Refresh the page to retrieve latest data from the blockchain!</h1>
+    <h1>Block number: {{ block|safe }}</h1>
+    <p>Data obtained from the 
+        <a href="https://github.com/neo-project/neo/blob/master/src/neo/SmartContract/Native/NeoToken.cs">NEO contract</a> and 
+        <a href="https://github.com/neo-ngd/CommitteeInfoContract">CommitteeInfo contract</a>.]
+    </p>
     {% for table in table %} 
     {{ table|safe }} 
     {% endfor %}
+    <h1>Unknown candidates:</h1>
+    {% for table2 in table2 %} 
+    {{ table2|safe }} 
+    {% endfor %}
+
+    <footer>
+        <p>love from NEO Discord</p>
+    </footer>
 </body>
