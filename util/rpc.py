@@ -5,7 +5,7 @@ import base64
 import hashlib
 import pandas as pd
 
-rpc_url = "http://seed1.neo.org:10332"
+rpc_url = "http://neo3.edgeofneo.com:10332"
 
 def _rpc_call(method, param = None):
     if param:
